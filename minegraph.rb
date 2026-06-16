@@ -111,6 +111,7 @@ class EGraph
     end
   end
 
+  # Returns an id
   def instantiate(pattern, substitution)
     if pattern.is_a?(Var)
       result = substitution[pattern.name]
@@ -119,6 +120,80 @@ class EGraph
     end
     raise unless pattern.is_a?(App)
     add_node(ENode.new(pattern.f, pattern.children.map { instantiate(it, substitution) }))
+  end
+
+  # Returns a list of nodes that are in the eclass `id`
+  def nodes_in_class(id)
+    hash_cons.select do |node, node_id|
+      id == node_id
+    end.keys
+  end
+
+  # Match `pattern` over the eclass `id` given the constraints `substitution`
+  # Returns a list of substitutions
+  def ematch_rec(pattern, id, substitution)
+    raise "bug" if !substitution.is_a?(Hash)
+    if pattern.is_a?(Var)
+      substitution_id = substitution[pattern.name]
+      # These two cases could be collapsed but why allocate a new substitution
+      # if we don't have to?
+      if substitution_id == nil
+        [{pattern.name => id, **substitution}]
+      elsif substitution_id == id
+        [substitution]
+      else
+        []
+      end
+    else
+      results = []
+      nodes_in_class(id).filter do |node|
+        # Filter for plausibly-matching nodes/patterns (by name/arity)
+        node.f == pattern.f && node.children.length == pattern.children.length
+      end.each do |node|
+        todo = [substitution]
+        pattern.children.zip(node.children) do |child_pattern, child_id|
+          new_todo = []
+          todo.each do |todo_substitution|
+            new_todo.concat(ematch_rec(child_pattern, child_id, todo_substitution))
+          end
+          todo = new_todo
+        end
+        results.concat(todo)
+      end
+      results
+    end
+  end
+
+  def ematch(pattern, id) = ematch_rec(pattern, id, {})
+
+  def rewrite(rewrites)
+    all_ids = Set[*hash_cons.values]
+    all_matches = []
+    rewrites.each do |left, right|
+      all_ids.each do |id|
+        substitutions = ematch(left, id)
+        all_matches << [right, id, substitutions]
+      end
+    end
+    all_matches.each do |right, id, substitutions|
+      substitutions.each do |substitution|
+        new_id = instantiate(right, substitution)
+        union(id, new_id)
+      end
+    end
+  end
+
+  def saturate(rewrites)
+    rebuild
+    loop do
+      len_parent = union_find.parent.length
+      len_hash_cons = hash_cons.length
+      rewrite(rewrites)
+      rebuild
+      if union_find.parent.length == len_parent && hash_cons.length == len_hash_cons
+        break
+      end
+    end
   end
 
   def union(x, y) = union_find.union(x, y)
@@ -199,5 +274,75 @@ class TestEGraph < Minitest::Test
     g.union(a, b)
     g.rebuild
     assert(g.equiv?(fffa, fffb))
+  end
+
+  def test_instantiate_var_returns_value
+    g = EGraph.new
+    pattern = Var.new(:a)
+    substitution = {a: 123}
+    assert_equal(g.instantiate(pattern, substitution), 123)
+  end
+
+  def test_instantiate_app
+    g = EGraph.new
+    a = g.add_node(ENode.new(:a))
+    b = g.add_node(ENode.new(:b))
+    pattern = App.new(:f, [Var.new(:a), Var.new(:b)])
+    substitution = {a: a, b: b}
+    assert_equal(g.instantiate(pattern, substitution), 2)
+  end
+
+  def test_commutativity
+    g = EGraph.new
+    a = g.add_node(ENode.new(:a))
+    b = g.add_node(ENode.new(:b))
+    ab = g.add_node(ENode.new(:add, [a, b]))
+    ba = g.add_node(ENode.new(:add, [b, a]))
+    g.saturate([
+      [App.new(:add, [Var.new(:x), Var.new(:y)]),
+       App.new(:add, [Var.new(:y), Var.new(:x)])],
+    ])
+    assert(g.equiv?(ab, ba))
+  end
+
+  def test_commutativity_seven
+    eg = EGraph.new
+    a = eg.add_node(ENode.new(:a))
+    b = eg.add_node(ENode.new(:b))
+    c = eg.add_node(ENode.new(:c))
+    d = eg.add_node(ENode.new(:d))
+    e = eg.add_node(ENode.new(:e))
+    f = eg.add_node(ENode.new(:f))
+    g = eg.add_node(ENode.new(:g))
+
+    # (a + (b + (c + (d + (e + (f + g)))))
+    result = eg.add_node(ENode.new(:add, [f, g]))
+    result = eg.add_node(ENode.new(:add, [e, result]))
+    result = eg.add_node(ENode.new(:add, [d, result]))
+    result = eg.add_node(ENode.new(:add, [c, result]))
+    result = eg.add_node(ENode.new(:add, [b, result]))
+    result = eg.add_node(ENode.new(:add, [a, result]))
+
+    # (g + (f + (e + (d + (c + (b + a)))))
+    flipped = eg.add_node(ENode.new(:add, [b, a]))
+    flipped = eg.add_node(ENode.new(:add, [c, flipped]))
+    flipped = eg.add_node(ENode.new(:add, [d, flipped]))
+    flipped = eg.add_node(ENode.new(:add, [e, flipped]))
+    flipped = eg.add_node(ENode.new(:add, [f, flipped]))
+    flipped = eg.add_node(ENode.new(:add, [g, flipped]))
+
+    eg.saturate([
+      # (a + b) -> (b + a)
+      [App.new(:add, [Var.new(:x), Var.new(:y)]),
+       App.new(:add, [Var.new(:y), Var.new(:x)])],
+      # (a + (b + c)) -> ((a + b) + c)
+      [App.new(:add, [Var.new(:x), App.new(:add, [Var.new(:y), Var.new(:z)])]),
+        App.new(:add, [App.new(:add, [Var.new(:x), Var.new(:y)]), Var.new(:z)])],
+      # Not necessary but faster
+      # # ((a + b) + c) -> (a + (b + c))
+      # [App.new(:add, [App.new(:add, [Var.new(:x), Var.new(:y)]), Var.new(:z)]),
+      #   App.new(:add, [Var.new(:x), App.new(:add, [Var.new(:y), Var.new(:z)])])],
+    ])
+    assert(eg.equiv?(result, flipped))
   end
 end
