@@ -4,12 +4,13 @@ class EGraph
   attr_accessor :parent
 
   def initialize
-    @parent = {}
+    @parent = []
   end
 
-  def makeset(x)
-    raise if parent.key?(x)
-    parent[x] = x
+  def makeset
+    result = parent.length
+    parent << result
+    result
   end
 
   def find(x)
@@ -34,24 +35,24 @@ require "minitest/autorun"
 class TestEGraph < Minitest::Test
   def test_union_find
     g = EGraph.new
-    g.makeset(1)
-    g.makeset(2)
-    g.makeset(3)
-    assert_equal(1, g.find(1))
-    assert_equal(2, g.find(2))
-    assert_equal(3, g.find(3))
-    g.union(1, 2)
-    assert_equal(g.find(1), g.find(2))
-    refute_equal(g.find(1), g.find(3))
+    v1 = g.makeset
+    v2 = g.makeset
+    v3 = g.makeset
+    assert_equal(v1, g.find(v1))
+    assert_equal(v2, g.find(v2))
+    assert_equal(v3, g.find(v3))
+    g.union(v1, v2)
+    assert_equal(g.find(v1), g.find(v2))
+    refute_equal(g.find(v1), g.find(v3))
   end
 
   def test_union_find_is_transitive
     g = EGraph.new
-    g.makeset(1)
-    g.makeset(2)
-    g.makeset(3)
-    g.union(1, 2)
-    g.union(2, 3)
-    assert_equal(g.find(1), g.find(3))
+    v1 = g.makeset
+    v2 = g.makeset
+    v3 = g.makeset
+    g.union(v1, v2)
+    g.union(v2, v3)
+    assert_equal(g.find(v1), g.find(v3))
   end
 end
