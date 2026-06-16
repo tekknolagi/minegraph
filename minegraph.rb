@@ -1,6 +1,4 @@
-ENode = Struct.new(:f, :children)  # (string, list of ids)
-
-class EGraph
+class UnionFind
   attr_accessor :parent
 
   def initialize
@@ -38,38 +36,40 @@ class EGraph
   end
 end
 
-egraph = EGraph.new
-a = egraph.makeset
-b = egraph.makeset
-c = egraph.makeset
-egraph.union(a, b)
-puts egraph.to_graphviz
-egraph.union(b, c)
-puts egraph.to_graphviz
+ENode = Struct.new(:f, :children)  # (string, list of ids)
+
+uf = UnionFind.new
+a = uf.makeset
+b = uf.makeset
+c = uf.makeset
+uf.union(a, b)
+puts uf.to_graphviz
+uf.union(b, c)
+puts uf.to_graphviz
 
 require "minitest/autorun"
 
-class TestEGraph < Minitest::Test
+class TestUnionFind < Minitest::Test
   def test_union_find
-    g = EGraph.new
-    v1 = g.makeset
-    v2 = g.makeset
-    v3 = g.makeset
-    assert_equal(v1, g.find(v1))
-    assert_equal(v2, g.find(v2))
-    assert_equal(v3, g.find(v3))
-    g.union(v1, v2)
-    assert_equal(g.find(v1), g.find(v2))
-    refute_equal(g.find(v1), g.find(v3))
+    uf = UnionFind.new
+    v1 = uf.makeset
+    v2 = uf.makeset
+    v3 = uf.makeset
+    assert_equal(v1, uf.find(v1))
+    assert_equal(v2, uf.find(v2))
+    assert_equal(v3, uf.find(v3))
+    uf.union(v1, v2)
+    assert_equal(uf.find(v1), uf.find(v2))
+    refute_equal(uf.find(v1), uf.find(v3))
   end
 
   def test_union_find_is_transitive
-    g = EGraph.new
-    v1 = g.makeset
-    v2 = g.makeset
-    v3 = g.makeset
-    g.union(v1, v2)
-    g.union(v2, v3)
-    assert_equal(g.find(v1), g.find(v3))
+    uf = UnionFind.new
+    v1 = uf.makeset
+    v2 = uf.makeset
+    v3 = uf.makeset
+    uf.union(v1, v2)
+    uf.union(v2, v3)
+    assert_equal(uf.find(v1), uf.find(v3))
   end
 end
