@@ -28,7 +28,24 @@ class EGraph
       parent[y] = x
     end
   end
+
+  def to_graphviz
+    edges = []
+    parent.each_with_index do |p, i|
+      edges << "#{i} -> #{p};"
+    end
+    "digraph G {\n#{edges.join("\n")}\n}"
+  end
 end
+
+egraph = EGraph.new
+a = egraph.makeset
+b = egraph.makeset
+c = egraph.makeset
+egraph.union(a, b)
+puts egraph.to_graphviz
+egraph.union(b, c)
+puts egraph.to_graphviz
 
 require "minitest/autorun"
 
