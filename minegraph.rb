@@ -46,14 +46,14 @@ class EGraph
   end
 end
 
-uf = UnionFind.new
-a = uf.makeset
-b = uf.makeset
-c = uf.makeset
-uf.union(a, b)
-puts uf.to_graphviz
-uf.union(b, c)
-puts uf.to_graphviz
+# uf = UnionFind.new
+# a = uf.makeset
+# b = uf.makeset
+# c = uf.makeset
+# uf.union(a, b)
+# puts uf.to_graphviz
+# uf.union(b, c)
+# puts uf.to_graphviz
 
 require "minitest/autorun"
 
