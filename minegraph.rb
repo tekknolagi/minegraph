@@ -86,7 +86,7 @@ class EGraph
                    result
                  end
         # Make sure the old id and new id are the same
-        changed = union(old_id, new_id)
+        changed |= union(old_id, new_id)
       end
     end
   end
@@ -154,5 +154,20 @@ class TestEGraph < Minitest::Test
     g.union(a, b)
     g.rebuild
     assert(g.equiv?(fa, fb))
+  end
+
+  def test_congruence_closure_requiring_successive_rebuilds
+    g = EGraph.new
+    a = g.add_node(ENode.new("a"))
+    fa = g.add_node(ENode.new("f", [a]))
+    ffa = g.add_node(ENode.new("f", [fa]))
+    fffa = g.add_node(ENode.new("f", [ffa]))
+    b = g.add_node(ENode.new("b"))
+    fb = g.add_node(ENode.new("f", [b]))
+    ffb = g.add_node(ENode.new("f", [fb]))
+    fffb = g.add_node(ENode.new("f", [ffb]))
+    g.union(a, b)
+    g.rebuild
+    assert(g.equiv?(fffa, fffb))
   end
 end
