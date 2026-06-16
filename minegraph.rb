@@ -68,22 +68,26 @@ class EGraph
   end
 
   def rebuild
-    old_hash_cons = hash_cons
-    hash_cons = {}
-    old_hash_cons.each do |node, old_id|
-      # Like add_node except we're re-using old_id instead of making a new set
-      # Canonicalize
-      node = canonicalize_node(node)
-      old_id = union_find.find(old_id)
-      # Intern or insert the old id
-      result = hash_cons[node]
-      new_id = if result == nil
-                 hash_cons[node] = old_id
-               else
-                 result
-               end
-      # Make sure the old id and new id are the same
-      union(old_id, new_id)
+    changed = true
+    while changed
+      changed = false
+      old_hash_cons = hash_cons
+      hash_cons = {}
+      old_hash_cons.each do |node, old_id|
+        # Like add_node except we're re-using old_id instead of making a new set
+        # Canonicalize
+        node = canonicalize_node(node)
+        old_id = union_find.find(old_id)
+        # Intern or insert the old id
+        result = hash_cons[node]
+        new_id = if result == nil
+                   hash_cons[node] = old_id
+                 else
+                   result
+                 end
+        # Make sure the old id and new id are the same
+        changed = union(old_id, new_id)
+      end
     end
   end
 
