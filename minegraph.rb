@@ -74,6 +74,7 @@ class EGraph
       # Like add_node except we're re-using old_id instead of making a new set
       # Canonicalize
       node = canonicalize_node(node)
+      old_id = union_find.find(old_id)
       # Intern or insert the old id
       result = hash_cons[node]
       new_id = if result == nil
