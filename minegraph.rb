@@ -44,6 +44,26 @@ end
 
 ENode = Struct.new(:f, :children)  # (string, list of ids)
 
+class Pattern; end
+
+class Var < Pattern
+  attr_accessor :name
+
+  def initialize(name)
+    @name = name
+  end
+end
+
+class App < Pattern
+  attr_accessor :f
+  attr_accessor :children
+
+  def initialize(f, children)
+    @f = f
+    @children = children
+  end
+end
+
 class EGraph
   attr_accessor :union_find
   attr_accessor :hash_cons
@@ -89,6 +109,16 @@ class EGraph
         changed |= union(old_id, new_id)
       end
     end
+  end
+
+  def instantiate(pattern, substitution)
+    if pattern.is_a?(Var)
+      result = substitution[pattern.name]
+      raise "Could not match #{pattern.name}" if result == nil
+      return result
+    end
+    raise unless pattern.is_a?(App)
+    add_node(ENode.new(pattern.f, pattern.children.map { instantiate(it, substitution) }))
   end
 
   def union(x, y) = union_find.union(x, y)
