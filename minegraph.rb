@@ -49,10 +49,14 @@ class EGraph
     @hash_cons = {}
   end
 
+  def canonicalize_node(node)
+    ENode.new(node.f, node.children&.map { union_find.find(it) })
+  end
+
   def add_node(node)
     # Canonicalize
-    node = ENode.new(node.f, node.children&.map { union_find.find(it) })
-    # Intern
+    node = canonicalize_node(node)
+    # Intern or make a new set
     result = hash_cons[node]
     return result if result != nil
     result = hash_cons[node] = union_find.makeset
@@ -60,6 +64,22 @@ class EGraph
   end
 
   def rebuild
+    old_hash_cons = hash_cons
+    hash_cons = {}
+    old_hash_cons.each do |node, old_id|
+      # Like add_node except we're re-using old_id instead of making a new set
+      # Canonicalize
+      node = canonicalize_node(node)
+      # Intern or insert the old id
+      result = hash_cons[node]
+      new_id = if result == nil
+                 hash_cons[node] = old_id
+               else
+                 result
+               end
+      # Make sure the old id and new id are the same
+      union_find.union(old_id, new_id)
+    end
   end
 
   def union(x, y) = union_find.union(x, y)
