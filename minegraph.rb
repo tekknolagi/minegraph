@@ -1,21 +1,21 @@
 ENode = Struct.new(:f, :children)  # (string, list of ids)
 
 class EGraph
-  attr_accessor :parents
+  attr_accessor :parent
 
   def initialize
-    @parents = {}
+    @parent = {}
   end
 
   def makeset(x)
-    raise if parents.key?(x)
-    parents[x] = x
+    raise if parent.key?(x)
+    parent[x] = x
   end
 
   def find(x)
     result = x
-    while parents[result] != result
-      result = parents[result]
+    while parent[result] != result
+      result = parent[result]
     end
     result
   end
@@ -24,7 +24,7 @@ class EGraph
     x = find(x)
     y = find(y)
     if x != y
-      parents[y] = x
+      parent[y] = x
     end
   end
 end
