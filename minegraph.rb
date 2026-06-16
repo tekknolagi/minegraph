@@ -38,6 +38,14 @@ end
 
 ENode = Struct.new(:f, :children)  # (string, list of ids)
 
+class EGraph
+  attr_accessor :union_find
+
+  def initialize
+    @union_find = UnionFind.new
+  end
+end
+
 uf = UnionFind.new
 a = uf.makeset
 b = uf.makeset
