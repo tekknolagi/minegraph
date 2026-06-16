@@ -134,23 +134,23 @@ end
 class TestEGraph < Minitest::Test
   def test_add_node_returns_new_id
     g = EGraph.new
-    v0 = g.add_node(ENode.new("f"))
+    v0 = g.add_node(ENode.new(:f))
     assert v0.is_a?(Integer)
   end
 
   def test_add_node_returns_existing_id
     g = EGraph.new
-    v0 = g.add_node(ENode.new("f"))
-    v1 = g.add_node(ENode.new("f"))
+    v0 = g.add_node(ENode.new(:f))
+    v1 = g.add_node(ENode.new(:f))
     assert_equal(v0, v1)
   end
 
   def test_congruence_closure
     g = EGraph.new
-    a = g.add_node(ENode.new("a"))
-    b = g.add_node(ENode.new("b"))
-    fa = g.add_node(ENode.new("f", [a]))
-    fb = g.add_node(ENode.new("f", [b]))
+    a = g.add_node(ENode.new(:a))
+    b = g.add_node(ENode.new(:b))
+    fa = g.add_node(ENode.new(:f, [a]))
+    fb = g.add_node(ENode.new(:f, [b]))
     g.union(a, b)
     g.rebuild
     assert(g.equiv?(fa, fb))
@@ -158,14 +158,14 @@ class TestEGraph < Minitest::Test
 
   def test_congruence_closure_requiring_successive_rebuilds
     g = EGraph.new
-    a = g.add_node(ENode.new("a"))
-    fa = g.add_node(ENode.new("f", [a]))
-    ffa = g.add_node(ENode.new("f", [fa]))
-    fffa = g.add_node(ENode.new("f", [ffa]))
-    b = g.add_node(ENode.new("b"))
-    fb = g.add_node(ENode.new("f", [b]))
-    ffb = g.add_node(ENode.new("f", [fb]))
-    fffb = g.add_node(ENode.new("f", [ffb]))
+    a = g.add_node(ENode.new(:a))
+    fa = g.add_node(ENode.new(:f, [a]))
+    ffa = g.add_node(ENode.new(:f, [fa]))
+    fffa = g.add_node(ENode.new(:f, [ffa]))
+    b = g.add_node(ENode.new(:b))
+    fb = g.add_node(ENode.new(:f, [b]))
+    ffb = g.add_node(ENode.new(:f, [fb]))
+    fffb = g.add_node(ENode.new(:f, [ffb]))
     g.union(a, b)
     g.rebuild
     assert(g.equiv?(fffa, fffb))
