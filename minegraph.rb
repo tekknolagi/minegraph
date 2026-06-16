@@ -19,11 +19,15 @@ class UnionFind
     result
   end
 
+  # make y point to x. if we make a change, return true. else return false.
   def union(x, y)
     x = find(x)
     y = find(y)
     if x != y
       parent[y] = x
+      true
+    else
+      false
     end
   end
 
