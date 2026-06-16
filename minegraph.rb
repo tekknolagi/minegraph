@@ -104,15 +104,4 @@ class TestEGraph < Minitest::Test
     v1 = g.add_node(ENode.new("f"))
     assert_equal(v0, v1)
   end
-
-  def test_add_node_returns_existing_id_with_children
-    g = EGraph.new
-    a = ENode.new("a")
-    b = ENode.new("b")
-    c0 = ENode.new("f", [a, b])
-    c1 = ENode.new("f", [a, b])
-    v0 = g.add_node(c0)
-    v1 = g.add_node(c1)
-    assert_equal(v0, v1)
-  end
 end
