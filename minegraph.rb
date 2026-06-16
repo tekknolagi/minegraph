@@ -82,7 +82,7 @@ class EGraph
                  result
                end
       # Make sure the old id and new id are the same
-      union_find.union(old_id, new_id)
+      union(old_id, new_id)
     end
   end
 
