@@ -40,9 +40,18 @@ ENode = Struct.new(:f, :children)  # (string, list of ids)
 
 class EGraph
   attr_accessor :union_find
+  attr_accessor :hash_cons
 
   def initialize
     @union_find = UnionFind.new
+    @hash_cons = {}
+  end
+
+  def add_node(node)
+    result = hash_cons[node]
+    return result if result != nil
+    result = hash_cons[node] = union_find.makeset
+    result
   end
 end
 
@@ -79,5 +88,31 @@ class TestUnionFind < Minitest::Test
     uf.union(v1, v2)
     uf.union(v2, v3)
     assert_equal(uf.find(v1), uf.find(v3))
+  end
+end
+
+class TestEGraph < Minitest::Test
+  def test_add_node_returns_new_id
+    g = EGraph.new
+    v0 = g.add_node(ENode.new("f"))
+    assert v0.is_a?(Integer)
+  end
+
+  def test_add_node_returns_existing_id
+    g = EGraph.new
+    v0 = g.add_node(ENode.new("f"))
+    v1 = g.add_node(ENode.new("f"))
+    assert_equal(v0, v1)
+  end
+
+  def test_add_node_returns_existing_id_with_children
+    g = EGraph.new
+    a = ENode.new("a")
+    b = ENode.new("b")
+    c0 = ENode.new("f", [a, b])
+    c1 = ENode.new("f", [a, b])
+    v0 = g.add_node(c0)
+    v1 = g.add_node(c1)
+    assert_equal(v0, v1)
   end
 end
