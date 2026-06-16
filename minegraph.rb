@@ -27,6 +27,8 @@ class UnionFind
     end
   end
 
+  def equiv?(x, y) = find(x) == find(y)
+
   def to_graphviz
     edges = []
     parent.each_with_index do |p, i|
@@ -53,6 +55,12 @@ class EGraph
     result = hash_cons[node] = union_find.makeset
     result
   end
+
+  def rebuild
+  end
+
+  def union(x, y) = union_find.union(x, y)
+  def equiv?(x, y) = union_find.equiv?(x, y)
 end
 
 # uf = UnionFind.new
@@ -103,5 +111,16 @@ class TestEGraph < Minitest::Test
     v0 = g.add_node(ENode.new("f"))
     v1 = g.add_node(ENode.new("f"))
     assert_equal(v0, v1)
+  end
+
+  def test_congruence_closure
+    g = EGraph.new
+    a = g.add_node(ENode.new("a"))
+    b = g.add_node(ENode.new("b"))
+    fa = g.add_node(ENode.new("f", a))
+    fb = g.add_node(ENode.new("f", b))
+    g.union(a, b)
+    g.rebuild
+    assert(g.equiv?(fa, fb))
   end
 end
