@@ -50,6 +50,9 @@ class EGraph
   end
 
   def add_node(node)
+    # Canonicalize
+    node = ENode.new(node.f, node.children&.map { union_find.find(it) })
+    # Intern
     result = hash_cons[node]
     return result if result != nil
     result = hash_cons[node] = union_find.makeset
@@ -117,8 +120,8 @@ class TestEGraph < Minitest::Test
     g = EGraph.new
     a = g.add_node(ENode.new("a"))
     b = g.add_node(ENode.new("b"))
-    fa = g.add_node(ENode.new("f", a))
-    fb = g.add_node(ENode.new("f", b))
+    fa = g.add_node(ENode.new("f", [a]))
+    fb = g.add_node(ENode.new("f", [b]))
     g.union(a, b)
     g.rebuild
     assert(g.equiv?(fa, fb))
